@@ -1,0 +1,28 @@
+# Use an official Go runtime as a base image
+FROM golang:latest AS build-dev
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the local package files to the container's workspace
+COPY . .
+
+# Install Go (if not already installed in the base image)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+    
+RUN go mod init myapp
+    
+# Build the Go application
+RUN go build -o myapp .
+
+
+# Final stage
+FROM scratch
+
+# Copy the binary from the build stage into the final image
+COPY --from=build-dev /app/myapp /myapp
+
+# Set the entrypoint for the final image
+ENTRYPOINT ["/myapp"]
